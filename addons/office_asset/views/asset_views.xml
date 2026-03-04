@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_office_asset_list" model="ir.ui.view">
+        <field name="name">office.asset.list</field>
+        <field name="model">office.asset</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'new'" decoration-success="state == 'available'" decoration-warning="state == 'assigned'">
+                <field name="name"/>
+                <field name="serial_number"/>
+                <field name="asset_type"/>
+                <field name="assigned_to"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_office_asset_form" model="ir.ui.view">
+        <field name="name">office.asset.form</field>
+        <field name="model">office.asset</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="serial_number"/>
+                            <field name="asset_type"/>
+                        </group>
+                        <group>
+                            <field name="assigned_to"/>
+                            <field name="purchase_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="notes" placeholder="Add specific details here..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_office_asset" model="ir.actions.act_window">
+        <field name="name">Office Assets</field>
+        <field name="res_model">office.asset</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_asset_root" name="Office Assets" sequence="10"/>
+    <menuitem id="menu_asset_main" name="Inventory" parent="menu_asset_root" action="action_office_asset"/>
+</odoo>
