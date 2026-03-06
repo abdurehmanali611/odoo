@@ -1,15 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_office_asset_list" model="ir.ui.view">
         <field name="name">office.asset.list</field>
         <field name="model">office.asset</field>
         <field name="arch" type="xml">
-            <list decoration-info="state == 'new'" decoration-success="state == 'available'" decoration-warning="state == 'assigned'">
+            <list decoration-success="state == 'available'" decoration-warning="state == 'assigned'" decoration-danger="state == 'damaged'">
                 <field name="name"/>
                 <field name="serial_number"/>
-                <field name="asset_type"/>
-                <field name="assigned_to"/>
-                <field name="state" widget="badge"/>
+                <field name="assigned_to" widget="many2one_avatar_user"/>
+                <field name="age"/>
+                <field name="state" widget="badge" decoration-success="state == 'available'" decoration-info="state == 'new'"/>
             </list>
         </field>
     </record>
@@ -23,23 +22,42 @@
                     <field name="state" widget="statusbar" options="{'clickable': '1'}"/>
                 </header>
                 <sheet>
+                    <field name="image" widget="image" class="oe_avatar" options="{'preview_image': 'image'}"/>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. MacBook Pro"/></h1>
+                    </div>
                     <group>
-                        <group>
-                            <field name="name"/>
+                        <group string="Basic Info">
                             <field name="serial_number"/>
-                            <field name="asset_type"/>
+                            <field name="asset_type" widget="radio" options="{'horizontal': true}"/>
                         </group>
-                        <group>
-                            <field name="assigned_to"/>
+                        <group string="Financials">
+                            <label for="price"/>
+                            <div class="o_row">
+                                <field name="price"/>
+                                <field name="currency_id" groups="base.group_multi_currency"/>
+                            </div>
                             <field name="purchase_date"/>
+                            <field name="age" class="text-info font-weight-bold"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Description" name="description">
-                            <field name="notes" placeholder="Add specific details here..."/>
+                        <page string="Management">
+                            <group>
+                                <field name="assigned_to" widget="many2one_avatar_user"/>
+                            </group>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Condition reports..."/>
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
