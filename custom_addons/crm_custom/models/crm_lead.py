@@ -1,78 +1,55 @@
-from odoo import models, fields
+from odoo import models, fields, api
+from odoo.exceptions import UserError
 
-class Customer(models.Model):
-    _name = "custom.customer"
-    _description = "Customer"
+class CrmLead(models.Model):
+    _inherit = 'crm.lead'
 
-    name = fields.Char(string="Name", required=True)
-    phone = fields.Char(string="Phone", required=True)
-    phone2 = fields.Char(string="Second Phone", required=False)
-    email = fields.Char(string="Email", required=False)
-    region = fields.Selection(
-        [
-            ("Addis Ababa", "Addis Ababa"),
-            ("Dire Dawa", "Dire Dawa"),
-            ("Oromia", "Oromia"),
-            ("Amhara", "Amhara"),
-            ("Southern nation nationality and people", "Southern nation nationality and people"),
-            ("Gambela", "Gambela"),
-            ("Tigray", "Tigray"),
-            ("Afar", "Afar"),
-            ("Benishangul-Gumuz", "Benishangul-Gumuz"),
-            ("Central Ethiopia", "Central Ethiopia"),
-            ("Harari", "Harari"),
-            ("Sidama", "Sidama"),
-            ("Somali", "Somali"),
-            ("South-western Ethiopia", "South-western Ethiopia"),
-        ],
-        string="Region",
-        required=True,
+    # ================= ASSIGNMENT =================
+    assigned_person_id = fields.Many2one(
+        'res.users',
+        string="Assigned Person"
     )
-    city = fields.Char(string="City", required=True)
-    company = fields.Char(string="Company Name", required=False)
-    Lead_Source = fields.Selection(
-        [
-            ("Walk-in", "Walk-in"),
-            ("Social Media", "Social Media"),
-            ("Phone", "Phone"),
-            ("Referral", "Referral")
-        ], string="Lead Source", required=True
-    )
-    interest=fields.Selection([
-        ("End-to-End IT Infrastructure Solutions", "End-to-End IT Infrastructure Solutions"),
-        ("Software Licensing & Enterprise Applications", "Software Licensing & Enterprise Applications"),
-        ("Banking Automation", "Banking Automation"),
-        ("Client Hardware", "Client Hardware"),
-        ("Office Automation & Document Management", "Office Automation & Document Management"),
-        ("Smart Collaboration Technologies", "Smart Collaboration Technologies"),
-        ("Custom Software Development & Integration", "Custom Software Development & Integration"),
-        ("Consulting, Training and Technical Support Services", "Consulting, Training and Technical Support Services")
-    ], string="Interested Service/Product", required=True)
-    follow_up_Date = fields.Date(string="Follow Up Date", required=True)
-    description = fields.Text(string="Description", required=False)
-    status = fields.Selection([
-        ("new", "New"),
-        ("Contacted", "Contacted"),
-        ("Qualified", "Qualified"),
-        ("Proposal", "Proposal"),
-        ("Won", "Won"),
-        ("Lost", "Lost")
-    ], default="new")
 
-    def action_set_contacted(self):
-        self.status = "Contacted"
+    # ================= PROCESS STAGE FIELDS =================
+    source_details = fields.Text(string="Source Details")
+    client_requirements = fields.Text(string="Client Requirements")
+    notes = fields.Text(string="Notes")
 
-    def action_set_qualified(self):
-        self.status = "Qualified"
+    # ================= APPROVAL =================
+    approval_status = fields.Selection([
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected')
+    ], default='pending', string="Approval Status")
 
-    def action_set_proposal(self):
-        self.status = "Proposal"
+    # ================= BUTTON ACTIONS =================
+    def action_assign(self):
+        if not self.env.user.has_group('crm_lead_workflow_custom.group_department_manager'):
+            raise UserError("Only managers can assign.")
+        return True
 
-    def action_set_won(self):
-        self.status = "Won"
+    def action_approve(self):
+        if not self.env.user.has_group('crm_lead_workflow_custom.group_department_manager'):
+            raise UserError("Only managers can approve.")
+        self.approval_status = 'approved'
 
-    def action_set_lost(self):
-        self.status = "Lost"
+    def action_reject(self):
+        if not self.env.user.has_group('crm_lead_workflow_custom.group_department_manager'):
+            raise UserError("Only managers can reject.")
+        self.approval_status = 'rejected'
 
+    # ================= STAGE VALIDATION =================
+    def write(self, vals):
+        if 'stage_id' in vals:
+            new_stage = self.env['crm.stage'].browse(vals['stage_id'])
 
+            for lead in self:
+                # Rule 1: Cannot go to Process without assignment
+                if new_stage.name == 'Process' and not lead.assigned_person_id:
+                    raise UserError("You must assign a person before moving to Process stage.")
 
+                # Rule 2: Cannot go to Approval without required data
+                if new_stage.name == 'Approval' and not lead.client_requirements:
+                    raise UserError("Fill client requirements before moving to Approval.")
+
+        return super().write(vals)

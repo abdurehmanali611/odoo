@@ -1,11 +1,13 @@
 {
-    'name': 'Customer Relationship Module',
-    'summary': 'Customer Relationship Aid',
+    'name': 'CRM Lead Workflow Custom',
+    'summary': 'Custom CRM Workflow with Assignment and Approval',
     'version': '1.0',
-    'depends': ['base'],
+    'depends': ['crm'],
     'data': [
+        'security/security.xml',
         'security/ir.model.access.csv',
-        'views/crm_views.xml'
+        'data/stages.xml',
+        'views/crm_views.xml',
     ],
     'installable': True,
     'application': True,

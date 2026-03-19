@@ -1,146 +1,53 @@
 <odoo>
     <data>
-
-        <!-- ================= LIST VIEW ================= -->
-        <record id="view_custom_customer_list" model="ir.ui.view">
-            <field name="name">custom.customer.list</field>
-            <field name="model">custom.customer</field>
+        <!-- ================= INHERIT CRM FORM ================= -->
+        <record id="crm_lead_form_inherit_custom" model="ir.ui.view">
+            <field name="name">crm.lead.form.custom.workflow</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_lead_view_form"/>
             <field name="arch" type="xml">
-                <list>
-                    <field name="name"/>
-                    <field name="phone"/>
-                    <field name="region"/>
-                    <field name="city"/>
-                    <field name="Lead_Source"/>
-                    <field name="interest"/>
-                    <field name="status"/>
-                </list>
-            </field>
-        </record>
-
-        <!-- ================= FORM VIEW ================= -->
-        <record id="view_custom_customer_form" model="ir.ui.view">
-            <field name="name">custom.customer.form</field>
-            <field name="model">custom.customer</field>
-            <field name="arch" type="xml">
-                <form string="Customer Lead">
-                    <header>
-                        <!-- STATUSBAR -->
-                        <field name="status" widget="statusbar"
-                               statusbar_visible="New,Contacted,Qualified,Proposal,Won,Lost"/>
-
-                        <!-- ACTION BUTTONS -->
-                        <button name="action_set_contacted" type="object"
-                                string="Mark Contacted"
-                                invisible="status != 'new'"/>
-
-                        <button name="action_set_qualified" type="object"
-                                string="Mark Qualified"
-                                invisible="status != 'Contacted'"/>
-
-                        <button name="action_set_proposal" type="object"
-                                string="Send Proposal"
-                                invisible="status != 'Qualified'"/>
-
-                        <button name="action_set_won" type="object"
-                                string="Mark Won"
-                                class="btn-success"
-                                invisible="status not in ('Proposal','Qualified')"/>
-
-                        <button name="action_set_lost" type="object"
-                                string="Mark Lost"
-                                class="btn-danger"
-                                invisible="status == 'Lost'"/>
-                    </header>
-
-                    <sheet>
-                        <!-- BASIC INFO -->
+                <!-- Hide Expected Revenue -->
+                <xpath expr="//field[@name='expected_revenue']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                <!-- Add Assignment Field -->
+                <xpath expr="//sheet/group/group" position="after">
+                    <group string="Assignment">
+                        <field name="assigned_person_id"/>
+                        <button name="action_assign"
+                                type="object"
+                                string="Assign"
+                                class="btn-primary"/>
+                    </group>
+                </xpath>
+                <!-- Process Stage Fields -->
+                <xpath expr="//sheet/notebook" position="inside">
+                    <page string="Process Information">
                         <group>
-                            <group>
-                                <field name="name"/>
-                                <field name="phone"/>
-                                <field name="phone2"/>
-                                <field name="email"/>
-                            </group>
-                            <group>
-                                <field name="region"/>
-                                <field name="city"/>
-                                <field name="company"/>
-                            </group>
+                            <field name="source_details"
+               invisible="stage_id.name != 'Process'"/>
+                            <field name="client_requirements"
+               invisible="stage_id.name != 'Process'"/>
+                            <field name="notes"
+               invisible="stage_id.name != 'Process'"/>
                         </group>
-
-                        <!-- LEAD INFO -->
-                        <group string="Lead Information">
-                            <group>
-                                <field name="Lead_Source"/>
-                                <field name="interest"/>
-                            </group>
-                            <group>
-                                <field name="follow_up_Date"/>
-                                <field name="status"/>
-                            </group>
-                        </group>
-
-                        <!-- DESCRIPTION -->
-                        <notebook>
-                            <page string="Description">
-                                <field name="description"/>
-                            </page>
-                        </notebook>
-
-                    </sheet>
-                </form>
+                    </page>
+                </xpath>
+                <!-- Approval Section -->
+                <xpath expr="//sheet" position="inside">
+                    <group string="Approval">
+                        <field name="approval_status" readonly="1"/>
+                        <button name="action_approve"
+                                type="object"
+                                string="Approve"
+                                class="btn-success"/>
+                        <button name="action_reject"
+                                type="object"
+                                string="Reject"
+                                class="btn-danger"/>
+                    </group>
+                </xpath>
             </field>
         </record>
-
-        <!-- ================= KANBAN VIEW ================= -->
-        <record id="view_custom_customer_kanban" model="ir.ui.view">
-            <field name="name">custom.customer.kanban</field>
-            <field name="model">custom.customer</field>
-            <field name="arch" type="xml">
-                <kanban default_group_by="status">
-                    <!-- Ensure all fields used are loaded -->
-                    <field name="status"/>
-                    <field name="name"/>
-                    <field name="phone"/>
-                    <field name="interest"/>
-
-                    <templates>
-                        <t t-name="card">
-                            <div class="o_kanban_card">
-                                <!-- BADGES -->
-                                <t t-if="record.status &amp; record.status.raw_value == 'Won'">
-                                    <span class="badge bg-success mb-1">WON</span>
-                                </t>
-                                <t t-if="record.status &amp; record.status.raw_value == 'Lost'">
-                                    <span class="badge bg-danger mb-1">LOST</span>
-                                </t>
-
-                                <!-- CARD CONTENT -->
-                                <strong><field name="name"/></strong>
-                                <div>📞 <field name="phone"/></div>
-                                <div><field name="interest"/></div>
-                            </div>
-                        </t>
-                    </templates>
-                </kanban>
-            </field>
-        </record>
-
-        <!-- ================= ACTION ================= -->
-        <record id="action_custom_customer" model="ir.actions.act_window">
-            <field name="name">Customer Leads</field>
-            <field name="res_model">custom.customer</field>
-            <field name="view_mode">kanban,list,form</field>
-        </record>
-
-        <!-- ================= MENU ================= -->
-        <menuitem id="menu_custom_root" name="CRM Custom"/>
-
-        <menuitem id="menu_custom_customer"
-                  name="Leads"
-                  parent="menu_custom_root"
-                  action="action_custom_customer"/>
-
     </data>
 </odoo>
